@@ -1,0 +1,125 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+
+
+% -> Portada
+\begin{titlepage}
+    \centering
+    \vspace*{5cm} 
+
+    {\Huge \bfseries Entrega 1 \par}
+    
+    \vspace{1.5cm}
+
+    {\Large Cristóbal Cabrera \par}
+    {\Large Verónica Torres \par}    
+    {\Large Alfonso Pavez \par}    
+    \vspace{2cm} 
+    
+    % Información adicional
+    {\large Optimización \par}
+    {\large Yoslandi Lazo \par}
+    {\large Universidad Técnica Federico Santa María\par}
+    
+    \vspace{1.5cm}
+    
+    {\large \today \par} % \today inserta la fecha actual
+    \vfill 
+    
+\end{titlepage}
+
+
+% -> Modelo matematico
+\section*{Formulación del Modelo Matemático}
+
+\subsection*{Conjuntos e Índices}
+\begin{itemize}
+    \item $I$: Conjunto de trabajadores, indexado por $i$.
+    \item $H$: Conjunto de días del horizonte de planificación, indexado por $h$.
+    \item $T$: Conjunto de turnos diarios (ej. $T = \{\text{mañana, tarde, noche}\}$), indexado por $t$.
+    \item $F$: Subconjunto de los días $H$ que corresponden a fines de semana, indexado por $f$.
+\end{itemize}
+
+\subsection*{Parámetros}
+\begin{itemize}
+    \item $D_{iht}$: Disposición del trabajador $i$ para realizar el turno $t$ en el día $h$, donde $D_{iht} \in \{0, 1, ..., 10\}$.
+    \item $R_{ht}$: Número requerido de trabajadores para el turno $t$ en el día $h$, donde $R_{ht} \in \mathbb{N}$.
+\end{itemize}
+
+\subsection*{Variables de Decisión}
+\begin{itemize}
+    \item $X_{iht} \in \{0, 1\}$: Variable binaria que indica si al trabajador $i$ se le asigna el turno $t$ en el día $h$.
+    \item $W_{if} \in \{0, 1\}$: Variable binaria auxiliar que indica si el trabajador $i$ trabaja en el fin de semana $f$.
+\end{itemize}
+
+\subsection*{Función Objetivo}
+El objetivo es maximizar la disposición total del personal:
+\begin{equation}
+    \text{Maximizar} \quad Z = \sum_{i \in I} \sum_{h \in H} \sum_{t \in T} D_{iht} \cdot X_{iht}
+\end{equation}
+
+\subsection*{Restricciones}
+\begin{enumerate}
+    \item \textbf{Naturaleza de las Variables:} Define el dominio de las variables.
+    \begin{align}
+        X_{iht} &\in \{0, 1\} \quad \forall i \in I, \forall h \in H, \forall t \in T \\
+        W_{if} &\in \{0, 1\} \quad \forall i \in I, \forall f \in F
+    \end{align}
+
+    \item \textbf{Cobertura de demanda: }
+    Cada turno en cada dia debe ser cubierto por almenos el numero requerido de trabajadores.
+    \begin{equation}
+        \sum_{i \in I} X_{iht} \ge R_{ht}
+        \quad \forall h \in H, \forall t \in T
+    \end{equation}
+
+    \item \textbf{Disponibilidad: }
+    Un trabajador solo puede ser asigando turnos para los cuales su disponibilidad sea mayor a 0.
+
+    \begin{equation}
+        X_{iht} \le
+        \begin{cases}
+        1, & \text{si } D_{iht} > 0\\
+        0, & \text{si } D_{iht} = 0
+        \end{cases}
+        \quad \forall i \in I, \forall h \in H, \forall t \in T
+    \end{equation}
+
+    \item \textbf{Maximo de dos turnos por dia:}
+    Un trabajador no puede realizar dos turnos el mismo dia
+    \begin{equation}
+        \sum_{t \in T} X_{iht} \le 2
+        \quad \forall i \in I, \forall h \in H
+    \end{equation}
+    \item \textbf{Prohibicion de turno noche seguido de turno mañana:}
+    Si un trabajador realiza el turno de noche en el dia $h$, este no podra realizar el turno de mañana. 
+    \begin{equation}
+        X_{ih, \text{noche}} + X_{ih, \text{mañana}} \le 1
+        \quad \forall i \in I, \forall h \in H \setminus \{\text{ultimo dia}\}
+    \end{equation}
+    \item \textbf{Definicion de fin de semana trabajado:}
+    $W_{if}$ se activa si el trabajador $i$ realiza algún turno durante el fin de semana $f$.
+    \begin{align}
+        W_{if} &\ge X_{iht} && \forall i \in I, \forall f \in F, \forall h \in f, \forall t \in T \\
+        W_{if} &\le \sum_{h \in f} \sum_{t \in T} X_{iht} && \forall i \in I, \forall f \in F
+    \end{align}
+    \item \textbf{No puede trabajar tres fin de semanas consecutivos}
+    Ningun trabajador puede trabajar tres fin de semanas seguidos
+    \begin{equation}
+        W_{i,f} + W_{i, f+1} + W_{i, f+2} \le 2
+        \quad \forall i \in I, \forall f = 1, \dots |F| -2
+    \end{equation}
+    
+    \item \textbf{Dominio de las variables:} 
+    \begin{align}
+        X_{iht} &\in \{0,1\} && \forall i \in I, \forall h \in H, \forall t \in T\\
+        W_{if} &\in \{0,1\} && \forall i \in I, \forall f \in F
+    \end{align}
+    
+\end{enumerate}
+
+\end{document}
