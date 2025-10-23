@@ -122,4 +122,86 @@ El objetivo es maximizar la disposición total del personal:
     
 \end{enumerate}
 
+\section*{Generador de Instancias}
+
+\subsection*{Introduccion}
+Para evaluar el desempeño del modelo matematico propuesto se implemento un \textbf{generador de instancias} en \texttt{Python}, cuya finalidad es crear conjuntos de datos realistas que representen diferentes escenarios de planificación de turnos. 
+
+El generador produce tres tipos de instancias segun su tamaño: \textbf{pequeña}, \textbf{mediana} y \textbf{grande}. Cada instancia incluye:
+\begin{itemize}
+    \item El numero de dias del horizonte de planificacion.
+    \item El numero de trabajadores disponibles.
+    \item Los turnos posibles en cada dia.
+    \item Los requerimientos de personal por dia y turno.
+    \item La disposicion individual de cada trabajador para cada turno.
+\end{itemize}
+
+\subsection*{Desglose del Codigo}
+El codigo se estructura en varios bloques principales, cada uno con una funcion especifica:
+
+\begin{enumerate}
+    \item \textbf{Configuracion inicial:} 
+    Se define un diccionario denominado \texttt{rangos\_generador\_instancias} que contiene los rangos posibles de dias, trabajadores y tipos de turnos para cada tamaño de instancia. 
+    Por ejemplo, las instancias pequeñas tienen entre 5 y 7 días, y de 5 a 15 trabajadores, mientras que las grandes alcanzan hasta 28 días y 90 trabajadores.
+
+    \item \textbf{Creacion de carpetas:}
+    Se genera una carpeta principal llamada \texttt{instancias/} donde se almacenan las subcarpetas correspondientes a cada tamaño (\texttt{pequeña}, \texttt{mediana}, \texttt{grande}). 
+    Se utiliza la función \texttt{os.makedirs(..., exist\_ok=True)} para evitar errores si la carpeta ya existe.
+
+    \item \textbf{Generacion de requerimientos:}
+    Para cada dia y turno, el programa calcula el numero de trabajadores requeridos usando una distribucion normal con:
+    \[
+    \mu = \frac{\text{total de trabajadores}}{\text{numero de turnos}}, \quad \sigma = 0.2\mu
+    \]
+    Los valores generados se redondean a enteros y se garantiza que sean al menos 1. 
+    Esto produce requerimientos realistas para que los valores no varien tanto.
+
+    \item \textbf{Generacion de disposiciones:}
+    Se crea un arreglo  \(D_{iht}\) con valores aleatorios entre 0 y 10 que representan la disposicion de cada trabajador \(i\) para realizar el turno \(t\) en el dia \(h\). 
+    Este conjunto de datos alimenta el modelo matematico en la funcion objetivo.
+
+    \item \textbf{Uso de \texttt{pandas} para exportar datos:}
+    Los requerimientos se guardan como una tabla con los dias como filas y los turnos como columnas.  
+    Las disposiciones se almacenan en un archivo separado con un índice jerarquico (\texttt{Trabajador, Dia, Turno}) utilizando \texttt{pd.MultiIndex}.
+
+    \item \textbf{Mensajes de confirmación:}
+    Al finalizar cada generacion, se imprime en consola un mensaje con el resumen de la instancia creada, indicando el tamaño, número de dias y cantidad de trabajadores.
+\end{enumerate}
+
+\subsection*{Explicacion del Funcionamiento}
+El generador recorre cada tipo de instancia (\texttt{pequeña}, \texttt{mediana}, \texttt{grande}) y crea cinco archivos diferentes por tipo, de la siguiente forma:
+
+\begin{enumerate}
+    \item Se elige aleatoriamente el numero de dias y de trabajadores dentro del rango definido.
+    \item Se calcula el numero de trabajadores requeridos por turno usando una distribución normal.
+    \item Se genera una matriz tridimensional de disposiciones aleatorias entre 0 y 10.
+    \item Los resultados se guardan en archivos \texttt{.csv}:
+    \begin{itemize}
+        \item \texttt{trabajadores\_requeridos\_instancia\_i.csv}: contiene la demanda diaria de personal.
+        \item \texttt{disposicion\_trabajador\_instancia\_i.csv}: contiene las disposiciones individuales.
+    \end{itemize}
+\end{enumerate}
+
+Este proceso se repite automáticamente cinco veces por tamaño de instancia, lo que permite generar una base variada de escenarios de prueba.
+
+\subsection*{Resultados del Codigo}
+Al ejecutar el generador, se crean las carpetas:
+\[
+\texttt{instancias/pequeña}, \quad \texttt{instancias/mediana}, \quad \texttt{instancias/grande}
+\]
+Cada una contiene cinco pares de archivos (\texttt{requerimientos} y \texttt{disposición}).  
+En la consola se muestran mensajes del tipo:
+
+\begin{verbatim}
+Instancia 1 (pequeña) generada: 6 días, 12 trabajadores.
+Instancia 2 (pequeña) generada: 7 días, 8 trabajadores.
+Instancia 1 (mediana) generada: 10 días, 28 trabajadores.
+...
+Generación completa!!!
+\end{verbatim}
+
+De esta forma, se obtiene un conjunto de datos reproducibles, coherentes y escalables, que permiten evaluar el comportamiento del modelo matemático bajo distintos tamaños de problema y condiciones de trabajo.
+
+
+
 \end{document}
