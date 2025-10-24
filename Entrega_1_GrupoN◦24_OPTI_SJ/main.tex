@@ -203,5 +203,46 @@ Generación completa!!!
 De esta forma, se obtiene un conjunto de datos reproducibles, coherentes y escalables, que permiten evaluar el comportamiento del modelo matemático bajo distintos tamaños de problema y condiciones de trabajo.
 
 
+\section*{Análisis de Factibilidad}
+\subsection*{Introduccion}
+ Este análisis comprueba el comportamiento del modelo frente a ambos casos, validando que el solver reporta \texttt{Optimal} cuando una solución existe, y \texttt{Infeasible} cuando es matemáticamente imposible.
+
+\subsection*{Análisis de Instancias Factibles (Resultado \textit{Optimal})}
+Se ejecutaron múltiples instancias generadas que arrojaron un estado \texttt{Optimal}. Esto demuestra que el modelo encuentra una solución válida cuando los parámetros lo permiten.
+
+\begin{itemize}
+    \item \textbf{Instancia 1:} Los valores entregados por los archivos de la instancia pequeña 1 fueron resueltos óptimamente. La demanda de personal ($R_{ht}$) era baja en comparación con el personal disponible ($I$), dando al modelo alta flexibilidad.
+    
+    \item \textbf{Instancia 4:} Los valores entregados por los archivos de la instancia pequeña 4 (15 trabajadores disponibles) también resultó \texttt{Optimal}. Este caso fue un caso más extremo ya que, la demanda máxima en un día (Día 6: $7+8=15$) era exactamente igual al número de trabajadores disponibles. El modelo validó que, aunque sin holgura, la instancia era factible.
+\end{itemize}
+
+\subsection*{Análisis de Instancias Infactibles (Resultado \textit{Infeasible})}
+Se comprobó la capacidad del modelo para detectar la infactibilidad. Además se incluye el motivo de la infactibilidad.
+
+\begin{itemize}
+    \item \textbf{Prueba de Instancia Generada (\texttt{instancia\_3}):}
+    \begin{itemize}
+        \item \textbf{Caso de Prueba:} Se tomaron los valores de los archivos de la instancia 3 (que cuenta con 15 trabajadores).
+        \item \textbf{Resultado Obtenido:} \texttt{Estado de la solución: Infeasible}.
+        \item \textbf{Motivo:} Al revisar los datos de esta instancia, se constató que la demanda $R_{ht}$ (la demanda era mayor a 15) generada superaba el personal disponible. Lo cual va en contra de la \textbf{Restricción 2 (Cobertura de demanda)}
+    \end{itemize}
+    
+    \item \textbf{Prueba de Instancia Generada (\texttt{instancia\_1}):}
+    \begin{itemize}
+        \item \textbf{Caso de prueba (Forzado):} Para forzar un error controlado, se editó manualmente el \texttt{disposicion\_trabajador\_instancia\_1.csv} de la \texttt{instancia\_pequeña\_1} (10 trabajadores) y se cambió la disposición de los trabajadores del Día 1, turno noche a 0.
+        \item \textbf{Resultado Obtenido:} \texttt{Estado de la solución: Infeasible}.
+        \item \textbf{Motivo:} El modelo intentó cumplir la \textbf{Restricción de disponibilidad  (Res. 3)}, que exigía: \begin{equation}
+        X_{iht} \le
+        \begin{cases}
+        1, & \text{si } D_{iht} > 0\\
+        0, & \text{si } D_{iht} = 0
+        \end{cases}
+        \quad \forall i \in I, \forall h \in H, \forall t \in T
+    \end{equation}
+Demostrando que el modelo detecta la infactibilidad por falta de disponibilidad.
+    \end{itemize}
+\end{itemize}
+
+
 
 \end{document}
