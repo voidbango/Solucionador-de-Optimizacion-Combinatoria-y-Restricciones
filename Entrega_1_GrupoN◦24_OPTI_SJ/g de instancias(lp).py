@@ -89,12 +89,12 @@ for size, settings in rangos_generador_instancias.items():
             for h_idx in range(dias):
                 for t_idx, t_name in enumerate(turnos):
                     D_iht = disposicion[i_idx, h_idx, t_idx]
-            if D_iht > 0:
-                obj_func.append(f"{D_iht} X_{i_idx+1}_{h_idx+1}_{t_name}") 
+                    if D_iht > 0:
+                        obj_func.append(f"{D_iht} X_{i_idx+1}_{h_idx+1}_{t_name}") 
 
 
-                lp_content.append("  Z: " + " + ".join(obj_func))
-                lp_content.append("\nSubject To")
+        lp_content.append("  Z: " + " + ".join(obj_func))
+        lp_content.append("\nSubject To")
         
         
         
@@ -174,5 +174,6 @@ for size, settings in rangos_generador_instancias.items():
             
         # mensaje de confirmacion
         print(f"Instancia {i} ({size}) generada en .LP: {dias} días, {trabajadores} trabajadores.")
+
 
 print("Generación completa!!!")
