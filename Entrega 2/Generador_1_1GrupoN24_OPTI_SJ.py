@@ -95,14 +95,14 @@ for size, settings in rangos_generador_instancias.items():
                         lp.append(f" X_{i_idx+1}_{h_idx+1}_{t} <= 0 ;")
 
         # ============================
-        # C4 max 1 turnos por día
+        # C4 max 2 turnos por día
         # ============================
 
         lp.append("/* C4: consistente con modelo (<= 1) */")
         for w in range(1, trabajadores + 1):
             for d in range(1, dias + 1):
                 lhs = " + ".join([f"X_{w}_{d}_{t}" for t in turnos])
-                lp.append(f"{lhs} <= 1 ;")
+                lp.append(f"{lhs} <= 2 ;")
 
         # ============================
         # C5 NIGHT → MORNING
@@ -173,4 +173,5 @@ for size, settings in rangos_generador_instancias.items():
         print(f"Instancia {i} ({size}) generada: {dias} días, {trabajadores} trabajadores.")
 
 print("¡Generación completada!")
+
 
