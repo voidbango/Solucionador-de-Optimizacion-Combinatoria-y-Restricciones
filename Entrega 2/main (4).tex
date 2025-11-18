@@ -1,0 +1,277 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+
+
+% -> Portada
+\begin{titlepage}
+    \centering
+    \vspace*{5cm} 
+
+    {\Huge \bfseries Entrega 1 \par}
+    
+    \vspace{1.5cm}
+
+    {\Large Cristóbal Cabrera \par}
+    {\Large Verónica Torres \par}    
+    {\Large Alfonso Pavez \par}    
+    \vspace{2cm} 
+    
+    % Información adicional
+    {\large Optimización \par}
+    {\large Yoslandi Lazo \par}
+    {\large Universidad Técnica Federico Santa María\par}
+    
+    \vspace{1.5cm}
+    
+    {\large \today \par} % \today inserta la fecha actual
+    \vfill 
+    
+\end{titlepage}
+
+
+% -> Modelo matematico
+\section*{Formulación del Modelo Matemático}
+
+\subsection*{Conjuntos e Índices}
+\begin{itemize}
+    \item $I$: Conjunto de trabajadores, indexado por $i$.
+    \item $H$: Conjunto de días del horizonte de planificación, indexado por $h$.
+    \item $T$: Conjunto de turnos diarios (ej. $T = \{\text{mañana, tarde, noche}\}$), indexado por $t$.
+    \item $F$: Subconjunto de los días $H$ que corresponden a fines de semana, indexado por $f$.
+\end{itemize}
+
+\subsection*{Parámetros}
+\begin{itemize}
+    \item $D_{iht}$: Disposición del trabajador $i$ para realizar el turno $t$ en el día $h$, donde $D_{iht} \in \{0, 1, ..., 10\}$.
+    \item $R_{ht}$: Número requerido de trabajadores para el turno $t$ en el día $h$, donde $R_{ht} \in \mathbb{N}$.
+\end{itemize}
+
+\subsection*{Variables de Decisión}
+\begin{itemize}
+    \item $X_{iht} \in \{0, 1\}$: Variable binaria que indica si al trabajador $i$ se le asigna el turno $t$ en el día $h$.
+    \item $W_{if} \in \{0, 1\}$: Variable binaria auxiliar que indica si el trabajador $i$ trabaja en el fin de semana $f$.
+\end{itemize}
+
+\subsection*{Función Objetivo}
+El objetivo es maximizar la disposición total del personal:
+\begin{equation}
+    \text{Maximizar} \quad Z = \sum_{i \in I} \sum_{h \in H} \sum_{t \in T} D_{iht} \cdot X_{iht}
+\end{equation}
+
+\subsection*{Restricciones}
+\begin{enumerate}
+    \item \textbf{Naturaleza de las Variables:} Define el dominio de las variables.
+    \begin{align}
+        X_{iht} &\in \{0, 1\} \quad \forall i \in I, \forall h \in H, \forall t \in T \\
+        W_{if} &\in \{0, 1\} \quad \forall i \in I, \forall f \in F
+    \end{align}
+
+    \item \textbf{Cobertura de demanda: }
+    Cada turno en cada dia debe ser cubierto por almenos el numero requerido de trabajadores.
+    \begin{equation}
+        \sum_{i \in I} X_{iht}  =  R_{ht}
+        \quad \forall h \in H, \forall t \in T
+    \end{equation}
+
+    \item \textbf{Disponibilidad: }
+    Un trabajador solo puede ser asigando turnos para los cuales su disponibilidad sea mayor a 0.
+
+    \begin{equation}
+        X_{iht} \le
+        \begin{cases}
+        1, & \text{si } D_{iht} > 0\\
+        0, & \text{si } D_{iht} = 0
+        \end{cases}
+        \quad \forall i \in I, \forall h \in H, \forall t \in T
+    \end{equation}
+
+    \item \textbf{Maximo de dos turnos por dia:}
+    Un trabajador no puede realizar dos turnos el mismo dia
+    \begin{equation}
+        \sum_{t \in T} X_{iht} \le 2
+        \quad \forall i \in I, \forall h \in H
+    \end{equation}
+    \item \textbf{Prohibicion de turno noche seguido de turno mañana:}
+    Si un trabajador realiza el turno de noche en el dia $h$, este no podra realizar el turno de mañana. 
+    \begin{equation}
+        X_{ih, \text{noche}} + X_{ih + 1, \text{mañana}} \le 1
+        \quad \forall i \in I, \forall h \in H \setminus \{\text{ultimo dia}\}
+    \end{equation}
+    \item \textbf{Definicion de fin de semana trabajado:}
+    $W_{if}$ se activa si el trabajador $i$ realiza algún turno durante el fin de semana $f$.
+    \begin{align}
+        W_{if} &\ge X_{iht} && \forall i \in I, \forall f \in F, \forall h \in f, \forall t \in T \\
+        W_{if} &\le \sum_{h \in f} \sum_{t \in T} X_{iht} && \forall i \in I, \forall f \in F
+    \end{align}
+    \item \textbf{No puede trabajar tres fin de semanas consecutivos}
+    Ningun trabajador puede trabajar tres fin de semanas seguidos
+    \begin{equation}
+        W_{i,f} + W_{i, f+1} + W_{i, f+2} \le 2
+        \quad \forall i \in I, \forall f = 1, \dots |F| -2
+    \end{equation}
+    
+    \item \textbf{Dominio de las variables:} 
+    \begin{align}
+        X_{iht} &\in \{0,1\} && \forall i \in I, \forall h \in H, \forall t \in T\\
+        W_{if} &\in \{0,1\} && \forall i \in I, \forall f \in F
+    \end{align}
+    
+\end{enumerate}
+
+\section*{Generador de Instancias}
+
+\subsection*{Introduccion}
+Para evaluar el desempeño del modelo matematico propuesto se implemento un \textbf{generador de instancias} en \texttt{Python}, cuya finalidad es crear conjuntos de datos realistas que representen diferentes escenarios de planificación de turnos. 
+
+El generador produce tres tipos de instancias segun su tamaño: \textbf{pequeña}, \textbf{mediana} y \textbf{grande}. Cada instancia incluye:
+\begin{itemize}
+    \item El numero de dias del horizonte de planificacion.
+    \item El numero de trabajadores disponibles.
+    \item Los turnos posibles en cada dia.
+    \item Los requerimientos de personal por dia y turno.
+    \item La disposicion individual de cada trabajador para cada turno.
+\end{itemize}
+
+\subsection*{Desglose del Codigo}
+El codigo se estructura en varios bloques principales, cada uno con una funcion especifica:
+
+\begin{enumerate}
+    \item \textbf{Configuracion inicial:} 
+    Se define un diccionario denominado \texttt{rangos\_generador\_instancias} que contiene los rangos posibles de dias, trabajadores y tipos de turnos para cada tamaño de instancia. 
+    Por ejemplo, las instancias pequeñas tienen entre 5 y 7 días, y de 5 a 15 trabajadores, mientras que las grandes alcanzan hasta 28 días y 90 trabajadores.
+
+    \item \textbf{Creacion de carpetas:}
+    Se genera una carpeta principal llamada \texttt{instancias/} donde se almacenan las subcarpetas correspondientes a cada tamaño (\texttt{pequeña}, \texttt{mediana}, \texttt{grande}). 
+    Se utiliza la función \texttt{os.makedirs(..., exist\_ok=True)} para evitar errores si la carpeta ya existe.
+
+    \item \textbf{Generacion de requerimientos:}
+    Para cada dia y turno, el programa calcula el numero de trabajadores requeridos usando una distribucion normal con:
+    \[
+    \mu = \frac{\text{total de trabajadores}}{\text{numero de turnos}}, \quad \sigma = 0.2\mu
+    \]
+    Los valores generados se redondean a enteros y se garantiza que sean al menos 1. 
+    Esto produce requerimientos realistas para que los valores no varien tanto.
+
+    \item \textbf{Generacion de disposiciones:}
+    Se crea un arreglo  \(D_{iht}\) con valores aleatorios entre 0 y 10 que representan la disposicion de cada trabajador \(i\) para realizar el turno \(t\) en el dia \(h\). 
+    Este conjunto de datos alimenta el modelo matematico en la funcion objetivo.
+
+    \item \textbf{Uso de \texttt{pandas} para exportar datos:}
+    Los requerimientos se guardan como una tabla con los dias como filas y los turnos como columnas.  
+    Las disposiciones se almacenan en un archivo separado con un índice jerarquico (\texttt{Trabajador, Dia, Turno}) utilizando \texttt{pd.MultiIndex}.
+
+    \item \textbf{Mensajes de confirmación:}
+    Al finalizar cada generacion, se imprime en consola un mensaje con el resumen de la instancia creada, indicando el tamaño, número de dias y cantidad de trabajadores.
+\end{enumerate}
+
+\subsection*{Explicacion del Funcionamiento}
+El generador recorre cada tipo de instancia (\texttt{pequeña}, \texttt{mediana}, \texttt{grande}) y crea cinco archivos diferentes por tipo, de la siguiente forma:
+
+\begin{enumerate}
+    \item Se elige aleatoriamente el numero de dias y de trabajadores dentro del rango definido.
+    \item Se calcula el numero de trabajadores requeridos por turno usando una distribución normal.
+    \item Se genera una matriz tridimensional de disposiciones aleatorias entre 0 y 10.
+    \item Los resultados se guardan en archivos \texttt{.csv}:
+    \begin{itemize}
+        \item \texttt{trabajadores\_requeridos\_instancia\_i.csv}: contiene la demanda diaria de personal.
+        \item \texttt{disposicion\_trabajador\_instancia\_i.csv}: contiene las disposiciones individuales.
+    \end{itemize}
+\end{enumerate}
+
+Este proceso se repite automáticamente cinco veces por tamaño de instancia, lo que permite generar una base variada de escenarios de prueba.
+
+\subsection*{Resultados del Codigo}
+Al ejecutar el generador, se crean las carpetas:
+\[
+\texttt{instancias/pequeña}, \quad \texttt{instancias/mediana}, \quad \texttt{instancias/grande}
+\]
+Cada una contiene cinco pares de archivos (\texttt{requerimientos} y \texttt{disposición}).  
+En la consola se muestran mensajes del tipo:
+
+\begin{verbatim}
+Instancia 1 (pequeña) generada: 6 días, 12 trabajadores.
+Instancia 2 (pequeña) generada: 7 días, 8 trabajadores.
+Instancia 1 (mediana) generada: 10 días, 28 trabajadores.
+...
+Generación completa!!!
+\end{verbatim}
+
+De esta forma, se obtiene un conjunto de datos reproducibles, coherentes y escalables, que permiten evaluar el comportamiento del modelo matemático bajo distintos tamaños de problema y condiciones de trabajo.
+
+\subsection*{Análisis del Comportamiento de la Función Objetivo}
+
+La función objetivo planteada busca maximizar la suma total de disposiciones de los trabajadores asignados a turnos:
+\[
+Z = \sum_{i \in I} \sum_{h \in H} \sum_{t \in T} D_{iht} \cdot X_{iht}.
+\]
+
+Este valor representa cuán “adecuadas’’ son las asignaciones, priorizando trabajadores con mayor disposición para determinados turnos.
+
+A medida que aumenta el tamaño de la instancia (mayor número de días, trabajadores y turnos), se observan los siguientes comportamientos:
+
+\begin{itemize}
+    \item \textbf{Crecimiento del espacio de búsqueda:} El número de variables binarias $X_{iht}$ crece proporcionalmente a $|I| \cdot |H| \cdot |T|$, lo cual incrementa la complejidad del problema y el tiempo requerido para encontrar una solución óptima.
+
+    \item \textbf{Valor esperado mayor del objetivo:} Debido a que se consideran más trabajadores y más días, es natural que el valor óptimo de $Z$ tienda a ser mayor en instancias medianas y grandes. Esto no implica necesariamente una mejor planificación o un menor tiempo de ejecucion, sino simplemente que se suman más disposiciones.
+
+    \item \textbf{Mayor flexibilidad en instancias grandes:}
+    Con más trabajadores disponibles, el modelo tiene mayor capacidad para asignar siempre al trabajador con la mejor disposición, evitando penalizaciones por falta de candidatos adecuados. Por ello, el valor del objetivo suele crecer de forma más eficiente y con menos restricciones activas.
+
+    \item \textbf{Restricciones restrictivas en instancias pequeñas:}
+    En instancias de pocos trabajadores, las restricciones de disponibilidad y de secuencias de turnos limitan severamente las decisiones, lo que puede reducir significativamente el valor alcanzable de $Z$.  
+    El modelo prioriza la factibilidad antes que la calidad, y la función objetivo puede verse fuertemente afectada.
+\end{itemize}
+
+\subsection*{Discusión sobre la Factibilidad del Modelo}
+
+El modelo propuesto puede llegar a presentar \textbf{infactibilidad} en ciertos escenarios, especialmente cuando las restricciones estructurales son demasiado exigentes en relación con los recursos disponibles. Entre las principales causas posibles se encuentran:
+
+\begin{itemize}
+    \item \textbf{Falta de trabajadores suficientes para cumplir los requerimientos diarios:}  
+    Si la suma de trabajadores disponibles no alcanza para cumplir con la cobertura mínima $R_{ht}$ de todos los turnos, el problema no tendrá solución.
+
+    \item \textbf{Restricciones de disponibilidad $D_{iht}$:}  
+    En algunos casos, los requerimientos del turno pueden coincidir con días donde muchos trabajadores tienen $D_{iht} = 0$.  
+    Si no existe ningún trabajador con disposición positiva para un turno obligatorio, la infactibilidad es inmediata.
+
+    \item \textbf{Restricción de turno noche seguido de turno mañana:}  
+    En horizontes cortos o con pocos trabajadores, esta restricción puede bloquear múltiples combinaciones y evitar cumplir la demanda del día siguiente.
+
+    \item \textbf{Restricción de fines de semana consecutivos:}  
+    En instancias pequeñas con pocos trabajadores y varios fines de semana, limitar a no trabajar tres fines de semana consecutivos puede no ser compatible con la cobertura mínima requerida.
+
+    \item \textbf{Combinación de restricciones:}  
+    Aunque cada restricción por separado puede ser razonable, la superposición de todas puede hacer que el espacio factible se reduzca a cero.
+\end{itemize}
+
+\subsection*{Análisis de instancias pequeñas}
+
+en esta siguiente seccion, se analizaran 3 instancias pequeñas, y se mostrara el modelado en tipo calendario.
+
+\subsection*{Análisis de los Tiempos de Resolución}
+
+El tiempo requerido para resolver el modelo de asignación de turnos depende directamente del tamaño de la instancia, es decir, del número de trabajadores, días y turnos involucrados. Dado que las variables $X_{iht}$ y $W_{if}$ son binarias, el problema crece de manera exponencial en el peor de los casos.
+
+\begin{itemize}
+    \item \textbf{Instancias pequeñas:}  
+    Suelen resolverse en tiempos muy reducidos (segundos o menos), debido a que el número total de variables y restricciones es acotado.
+    
+    \item \textbf{Instancias medianas:}  
+    A medida que aumentan los días y los trabajadores, el número de variables crece proporcionalmente a $|I|\cdot|H|\cdot|T|$.  
+    Este incremento hace que el solver requiera más nodos de exploración en el árbol de búsqueda y que se activen más restricciones, lo que eleva el tiempo de cómputo.  
+    En esta etapa los tiempos pueden ir desde algunos segundos hasta minutos.
+
+    \item \textbf{Instancias grandes:}  
+    El crecimiento del tamaño del problema genera un efecto significativo en la carga computacional.  
+    El solver debe manejar miles de variables binarias, lo cual incrementa dramáticamente la dificultad del proceso de ramificación.
+    Las instancias grandes pueden tardar varios minutos e incluso más.
+
+\end{itemize}
+
+
+
+\end{document}
